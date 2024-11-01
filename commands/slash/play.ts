@@ -1,15 +1,15 @@
-import { logger, type SlashCommand } from "4u7o";
+import { CommandType, logger, SlashCommand } from "4u7o";
 import { ChatInputCommandInteraction, GuildMember, SlashCommandBuilder } from "discord.js";
 import type DisTube from "distube";
-
-export default {
-  info: {
+export default new SlashCommand(
+  {
     name: "play",
+    type: CommandType.Slash,
     description: "Play a song",
     category: "music",
     aliases: ["p"],
   },
-  builder: new SlashCommandBuilder()
+  new SlashCommandBuilder()
     .setName("play")
     .setDescription("Play a song")
     .setDescriptionLocalizations({
@@ -24,7 +24,7 @@ export default {
         })
         .setRequired(true),
     ),
-  async execute(interaction, { distube }) {
+  async (interaction, { distube }) => {
     const returnMap = new Map<string, string>();
     isMeetsCondition(returnMap, interaction, distube);
     if (returnMap.has("error")) {
@@ -40,7 +40,7 @@ export default {
       await distube!.play(channel, song);
       await interaction.editReply(`Playing: ${song}`);
     } catch (error) {
-      await interaction.reply(`Can't play the song: Please contact the developer!`);
+      await interaction.editReply(`Can't play the song: Please contact the developer!`);
       logger.error(error, {
         label: "play",
         song,
@@ -50,7 +50,7 @@ export default {
       });
     }
   },
-} as SlashCommand;
+);
 
 function isMeetsCondition(
   returnMap: Map<string, string>,
