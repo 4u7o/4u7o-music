@@ -1,5 +1,10 @@
 import { CommandType, logger, SlashCommand } from "4u7o";
-import { ChatInputCommandInteraction, GuildMember, SlashCommandBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  GuildMember,
+  SlashCommandBuilder,
+  type GuildTextBasedChannel,
+} from "discord.js";
 import type DisTube from "distube";
 export default new SlashCommand(
   {
@@ -37,8 +42,11 @@ export default new SlashCommand(
 
     try {
       await interaction.deferReply();
-      await distube!.play(channel, song);
-      await interaction.editReply(`Playing: ${song}`);
+      await distube!.play(channel, song, {
+        textChannel: interaction.channel as GuildTextBasedChannel,
+        member,
+      });
+      await interaction.deleteReply();
     } catch (error) {
       await interaction.editReply(`Can't play the song: Please contact the developer!`);
       logger.error(error, {

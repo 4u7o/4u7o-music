@@ -1,10 +1,14 @@
 import { _4u7oClient, BaseModule, config, logger, SlashCommand, CommandType } from "4u7o";
+import { DirectLinkPlugin } from "@distube/direct-link";
+import { FilePlugin } from "@distube/file";
 import SoundCloudPlugin from "@distube/soundcloud";
 import SpotifyPlugin from "@distube/spotify";
 import { YouTubePlugin } from "@distube/youtube";
+import { YtDlpPlugin } from "@distube/yt-dlp";
 import { REST, Routes } from "discord.js";
 import DisTube from "distube";
 import fs, { readdirSync } from "node:fs";
+import { distubeEventLoader } from "./events/distube";
 class MusicModule extends BaseModule {
   public override name = "MusicModule";
 
@@ -16,11 +20,19 @@ class MusicModule extends BaseModule {
           cookies: JSON.parse(fs.readFileSync(__dirname + "/" + "_ytb-cookies.json", "utf-8")),
         }),
         new SpotifyPlugin({
-          api: { clientId: config.spotify.CLIENT_ID, clientSecret: config.spotify.CLIENT_SECRET },
+          api: {
+            clientId: config.spotify.CLIENT_ID,
+            clientSecret: config.spotify.CLIENT_SECRET,
+            topTracksCountry: "VN",
+          },
         }),
         new SoundCloudPlugin(),
+        new FilePlugin(),
+        new DirectLinkPlugin(),
+        new YtDlpPlugin(),
       ],
     });
+    distubeEventLoader(client.distube);
     logger.info("DisTube has been loaded");
   }
 
