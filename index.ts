@@ -57,10 +57,12 @@ class MusicModule extends BaseModule {
         try {
           const command = (await import(`${__dirname}/commands/${folder.name}/${file.name}`))
             .default as SlashCommand;
-          client.commands.set(`${command.info.name}_${command.info.type}`, command);
+          client.commands.insertCommand(command);
           commandList.push(command);
         } catch (error) {
-          logger.error(`Failed to load command: ${file.name}`, error);
+          logger.error(error, {
+            message: `Failed to load command: ${file.name}`,
+          });
         }
       }
 

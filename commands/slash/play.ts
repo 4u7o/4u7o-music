@@ -1,8 +1,8 @@
 import { CommandType, logger, SlashCommand } from "4u7o";
 import {
-  ChatInputCommandInteraction,
   GuildMember,
   SlashCommandBuilder,
+  type APIInteractionGuildMember,
   type GuildTextBasedChannel,
 } from "discord.js";
 import type DisTube from "distube";
@@ -12,13 +12,13 @@ export default new SlashCommand(
     type: CommandType.Slash,
     description: "Play a song",
     category: "music",
-    aliases: ["p"],
+    aliases: ["p", "play"],
   },
   new SlashCommandBuilder()
     .setName("play")
     .setDescription("Play a song")
     .setDescriptionLocalizations({
-      vi: "Phát nhạc (Du túp, Spotify, Soundcloud)",
+      vi: "Phát nhạc (Du túp, ~Spotify~, ~Soundcloud~)",
     })
     .addStringOption((option) =>
       option
@@ -31,7 +31,7 @@ export default new SlashCommand(
     ),
   async (interaction, { distube }) => {
     const returnMap = new Map<string, string>();
-    isMeetsCondition(returnMap, interaction, distube);
+    isMeetsCondition(returnMap, interaction.member, distube);
     if (returnMap.has("error")) {
       return await interaction.reply(returnMap.get("error")!);
     }
@@ -58,15 +58,42 @@ export default new SlashCommand(
       });
     }
   },
+  async (message, { distube }) => {
+    const returnMap = new Map<string, string>();
+    isMeetsCondition(returnMap, message.member, distube);
+
+    if (returnMap.has("error")) {
+      return await message.reply(returnMap.get("error")!);
+    }
+
+    const song = message.content!.split(" ").slice(1).join(" ");
+
+    const member = message.member as GuildMember;
+    const channel = member.voice.channel!;
+
+    try {
+      await distube!.play(channel, song, {
+        textChannel: message.channel as GuildTextBasedChannel,
+        member,
+      });
+    } catch (error) {
+      await message.reply(`Can't play the song: Please contact the developer!`);
+      logger.error(error, {
+        label: "play",
+        song,
+        member: member.user.username,
+        channel: channel.name,
+        guild: channel.guild.name,
+      });
+    }
+  },
 );
 
 function isMeetsCondition(
   returnMap: Map<string, string>,
-  interaction: ChatInputCommandInteraction,
+  member: APIInteractionGuildMember | GuildMember | null,
   distube: DisTube | undefined,
 ): void {
-  const member = interaction.member;
-
   if (!distube) {
     returnMap.set("error", "DisTube is not loaded");
     return;
